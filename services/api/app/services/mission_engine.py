@@ -154,7 +154,15 @@ class MissionEngineService:
 
         mission.status = "completed"
         mission.completed_at = datetime.now(timezone.utc)
-        return self.user_mission_repo.update(mission)
+        updated_mission = self.user_mission_repo.update(mission)
+
+        # Trigger streak evaluation
+        from app.services.retention import RetentionService
+        retention_service = RetentionService(self.db)
+        retention_service.evaluate_and_update_streak(user.id)
+        self.db.commit()
+
+        return updated_mission
 
     def get_mission_history(
         self, auth_user_id: UUID, page: int = 1, page_size: int = 20

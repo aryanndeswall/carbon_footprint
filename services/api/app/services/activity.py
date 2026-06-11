@@ -68,6 +68,12 @@ class ActivityService:
         from app.services.carbon_engine import CarbonEngineService
         engine_service = CarbonEngineService(self.db)
         engine_service.process_activity(created_activity)
+
+        # Trigger streak evaluation
+        from app.services.retention import RetentionService
+        retention_service = RetentionService(self.db)
+        retention_service.evaluate_and_update_streak(user.id)
+
         self.db.commit()
 
         return created_activity
