@@ -10,14 +10,32 @@ from app.core.config import settings
 # Force the JWT secret to test-secret during tests
 settings.SUPABASE_JWT_SECRET = "test-secret"
 
+@pytest.fixture(scope="session", autouse=True)
+def seed_test_database():
+    """
+    Seeds emission factors once before the test session starts.
+    """
+    import sys
+    import os
+    sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../packages/carbon-core")))
+    from app.services.seed import seed_emission_factors
+    session = SessionLocal()
+    try:
+        session.execute(text("TRUNCATE TABLE emission_factors CASCADE;"))
+        session.commit()
+        seed_emission_factors(session)
+    finally:
+        session.close()
+
 @pytest.fixture(scope="function", autouse=True)
 def clean_database():
     """
-    Truncates all tables before each test to ensure a clean database state.
+    Truncates user-specific tables before each test to ensure a clean database state
+    while preserving seeded emission factors.
     """
     session = SessionLocal()
     try:
-        session.execute(text("TRUNCATE TABLE user_preferences, activity_events, users CASCADE;"))
+        session.execute(text("TRUNCATE TABLE users CASCADE;"))
         session.commit()
     except Exception:
         session.rollback()

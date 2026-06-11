@@ -12,6 +12,7 @@ class ActivityService:
     Service layer containing activity-related business logic and validation rules.
     """
     def __init__(self, db: Session):
+        self.db = db
         self.activity_repo = ActivityRepository(db)
         self.user_repo = UserRepository(db)
 
@@ -61,7 +62,15 @@ class ActivityService:
             metadata_json=metadata
         )
 
-        return self.activity_repo.create(activity)
+        created_activity = self.activity_repo.create(activity)
+
+        # Trigger carbon engine to calculate emissions and update footprint
+        from app.services.carbon_engine import CarbonEngineService
+        engine_service = CarbonEngineService(self.db)
+        engine_service.process_activity(created_activity)
+        self.db.commit()
+
+        return created_activity
 
     def get_activity_by_id(self, auth_user_id: UUID, activity_id: UUID) -> Optional[ActivityEvent]:
         """

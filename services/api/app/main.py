@@ -1,23 +1,40 @@
+import sys
+import os
+# Append packages path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../packages/carbon-core")))
+
 from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import text
-from app.database.session import get_db
+from app.database.session import get_db, SessionLocal
 from app.middleware.jwt_auth import JWTAuthMiddleware
 from app.api.users import router as user_router
 from app.api.activities import router as activity_router
+from app.api.footprints import router as footprint_router
+from app.services.seed import seed_emission_factors
 
 app = FastAPI(
     title="Carbon Footprint Awareness Platform API",
-    description="Sprint 1 API including auth and user lifecycle systems",
-    version="0.2.0"
+    description="Sprint 3 API including carbon engine and footprint aggregation systems",
+    version="0.3.0"
 )
 
 # Add JWT Authentication middleware globally
 app.add_middleware(JWTAuthMiddleware)
 
+# Seed emission factors on API startup
+@app.on_event("startup")
+def startup_event():
+    db = SessionLocal()
+    try:
+        seed_emission_factors(db)
+    finally:
+        db.close()
+
 # Include core routers under versioned prefix
 app.include_router(user_router, prefix="/api/v1")
 app.include_router(activity_router, prefix="/api/v1")
+app.include_router(footprint_router, prefix="/api/v1")
 
 @app.get("/health")
 def health_check(db: Session = Depends(get_db)):
