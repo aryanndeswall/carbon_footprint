@@ -284,3 +284,68 @@ def seed_mission_templates(db: Session):
             db.add(template)
             
     db.commit()
+
+
+def seed_achievements(db: Session):
+    """
+    Seeds the achievements table with the 6 initial achievements.
+    """
+    from app.models.gamification import Achievement
+
+    initial_achievements = [
+        {
+            "title": "First Step",
+            "description": "Complete first activity",
+            "badge_icon": "badge_first_step.png",
+            "category": "logging",
+            "points": 10
+        },
+        {
+            "title": "Mission Starter",
+            "description": "Complete first mission",
+            "badge_icon": "badge_mission_starter.png",
+            "category": "missions",
+            "points": 10
+        },
+        {
+            "title": "Week Warrior",
+            "description": "Maintain 7-day streak",
+            "badge_icon": "badge_week_warrior.png",
+            "category": "streaks",
+            "points": 20
+        },
+        {
+            "title": "Green Champion",
+            "description": "Maintain 30-day streak",
+            "badge_icon": "badge_green_champion.png",
+            "category": "streaks",
+            "points": 50
+        },
+        {
+            "title": "Carbon Saver",
+            "description": "Reduce emissions by 10%",
+            "badge_icon": "badge_carbon_saver.png",
+            "category": "carbon_reduction",
+            "points": 30
+        },
+        {
+            "title": "Community Leader",
+            "description": "Join first group",
+            "badge_icon": "badge_community_leader.png",
+            "category": "community",
+            "points": 15
+        }
+    ]
+
+    for a in initial_achievements:
+        exists = db.query(Achievement).filter(Achievement.title == a["title"]).first()
+        if not exists:
+            achievement = Achievement(
+                title=a["title"],
+                description=a["description"],
+                badge_icon=a["badge_icon"],
+                category=a["category"],
+                points=a["points"]
+            )
+            db.add(achievement)
+    db.commit()

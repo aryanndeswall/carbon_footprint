@@ -74,6 +74,11 @@ class ActivityService:
         retention_service = RetentionService(self.db)
         retention_service.evaluate_and_update_streak(user.id)
 
+        # Trigger sustainability score and achievement check
+        from app.services.gamification import SustainabilityScoreService
+        score_service = SustainabilityScoreService(self.db)
+        score_service.calculate_and_save_score(user.id)
+
         self.db.commit()
 
         return created_activity
