@@ -106,6 +106,23 @@ Main Tabs
 └── Profile
 ```
 
+### Tab Notification Badges
+
+| Tab | Badge Condition | Badge Style |
+|-----|----------------|-------------|
+| Home | Never | — |
+| Missions | Uncompleted daily missions exist | Count badge (e.g., `3`) |
+| Coach | New AI insight generated since last visit | Red dot (no count) |
+| Community | — | Reserved for V2 |
+| Profile | — | Reserved for V2 |
+
+#### Coach Tab Badge Rules
+
+* Badge appears when `hasUnreadInsight === true`.
+* Badge clears immediately when the Coach tab is opened.
+* Badge state is managed client-side in `useCoachData` hook.
+* Badge is a red dot indicator with no count number.
+
 ---
 
 # Home Tab
@@ -264,6 +281,24 @@ Opens:
 Activity Logging Modal
 ```
 
+### FAB Clearance Rule
+
+The FAB must maintain minimum clearance from the bottom tab bar:
+
+```text
+marginBottom = tabBarHeight + 16px
+```
+
+This prevents visual collision with the Profile tab icon on small phones (≤375px).
+
+### FAB Exceptions
+
+The FAB is hidden on the following screens:
+
+* What-If Simulator — hidden to prevent distraction and conflict with the Post-Simulation CTA bar.
+
+On all other screens, the FAB must remain visible and tappable.
+
 ---
 
 # Dashboard Navigation
@@ -352,6 +387,8 @@ No public social feed in Version 1.
 Supported:
 
 ```text
+carbonsense://dashboard
+
 carbonsense://missions
 
 carbonsense://score
@@ -363,7 +400,22 @@ carbonsense://forecast
 carbonsense://simulator
 
 carbonsense://achievement/{id}
+
+carbonsense://activity/log
 ```
+
+### Deep Link Definitions
+
+| Deep Link | Destination | Use Case |
+|-----------|-------------|----------|
+| `carbonsense://dashboard` | Home Tab (Dashboard) | Push notification — return to app |
+| `carbonsense://missions` | Missions Tab | Push notification — daily mission reminder |
+| `carbonsense://score` | Sustainability Score Screen | Score milestone notification |
+| `carbonsense://coach` | Coach Tab | New insight notification |
+| `carbonsense://forecast` | Forecast Screen | Weekly forecast ready |
+| `carbonsense://simulator` | Simulator Screen | Direct feature access |
+| `carbonsense://achievement/{id}` | Achievement Details | Achievement unlocked notification |
+| `carbonsense://activity/log` | Activity Logging Modal | Push notification — log activity CTA |
 
 ---
 
@@ -380,6 +432,37 @@ Profile
 ```
 
 Require authentication.
+
+---
+
+# Back Navigation Behavior
+
+Navigation type per screen:
+
+| Screen | Route Group | Back Behavior |
+|--------|-------------|---------------|
+| Dashboard | `(tabs)/home` | Tab — no back |
+| Missions | `(tabs)/missions` | Tab — no back |
+| Coach | `(tabs)/coach` | Tab — no back |
+| Community | `(tabs)/community` | Tab — no back |
+| Profile | `(tabs)/profile` | Tab — no back |
+| Mission Details | Stack under Missions | Stack back to Mission List |
+| Achievement Details | Stack under Profile | Stack back to Achievements |
+| Activity Log Modal | Global modal | Dismiss (swipe down or X) |
+| OCR Upload | Global modal | Dismiss |
+| OCR Review | Stack under OCR Upload | Stack back to OCR Upload |
+| Forecast | Root stack (`/forecast`) | Stack back to calling screen |
+| Simulator | Root stack (`/simulator`) | Stack back to calling screen |
+| Score | Root stack (`/score`) | Stack back to calling screen |
+| Settings | Root stack (`/settings`) | Stack back to Profile |
+
+### Implementation Note
+
+`forecast/` and `simulator/` are root-level routes outside the `(tabs)/` group.
+
+They must be configured as stack screens in the root `_layout.tsx`.
+
+Back navigation will pop to the screen that navigated to them — this is correct and expected behavior.
 
 ---
 

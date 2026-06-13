@@ -1,0 +1,6 @@
+{
+  "devDependencies": {
+    "eslint": "^9.39.4",
+    "eslint-config-expo": "~56.0.4"
+  }
+}
